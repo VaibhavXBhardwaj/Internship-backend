@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard – PrimeTrade</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 2rem; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    h1 { font-size: 1.4rem; color: #38bdf8; }
+    button { padding: 0.5rem 1rem; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button.danger { background: #dc2626; }
+    .form-row { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    input, select { padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: #e2e8f0; font-size: 0.9rem; }
+    input { flex: 1; min-width: 160px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #1e293b; font-size: 0.9rem; }
+    th { background: #1e293b; color: #94a3b8; }
+    .badge { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; }
+    .badge.pending { background: #451a03; color: #fbbf24; }
+    .badge.in-progress { background: #0c1a4f; color: #60a5fa; }
+    .badge.completed { background: #052e16; color: #86efac; }
+    .msg { padding: 0.5rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem; }
+    .msg.error { background: #450a0a; color: #fca5a5; }
+    .msg.success { background: #052e16; color: #86efac; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>My Tasks</h1>
+    <div>
+      <span id="userLabel" style="margin-right:1rem; color:#94a3b8; font-size:0.9rem;"></span>
+      <button class="danger" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div id="msg" class="msg" style="display:none"></div>
+
+  <div class="form-row">
+    <input type="text" id="taskTitle" placeholder="Task title" />
+    <input type="text" id="taskDesc" placeholder="Description (optional)" />
+    <select id="taskStatus">
+      <option value="pending">Pending</option>
+      <option value="in-progress">In Progress</option>
+      <option value="completed">Completed</option>
+    </select>
+    <button onclick="createTask()">Add Task</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Title</th><th>Description</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody id="taskList"></tbody>
+  </table>
+
+  <script>
+    const API = 'http://localhost:5000/api/v1';
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token) window.location.href = 'index.html';
+
+    document.getElementById('userLabel').textContent = `${user.name} (${user.role})`;
+
+    function authHeaders() {
+      return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+    }
+
+    function showMsg(text, type) {
+      const el = document.getElementById('msg');
+      el.textContent = text;
+      el.className = `msg ${type}`;
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    async function loadTasks() {
+      const res = await fetch(`${API}/tasks`, { headers: authHeaders() });
+      if (res.status === 401) { logout(); return; }
+      const data = await res.json();
+      const tbody = document.getElementById('taskList');
+      tbody.innerHTML = '';
+      data.tasks.forEach(t => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${t.title}</td>
+            <td>${t.description || '—'}</td>
+            <td><span class="badge ${t.status}">${t.status}</span></td>
+            <td>
+              <button onclick="deleteTask('${t._id}')">Delete</button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    async function createTask() {
+      const title = document.getElementById('taskTitle').value.trim();
+      const description = document.getElementById('taskDesc').value.trim();
+      const status = document.getElementById('taskStatus').value;
+      if (!title) { showMsg('Title is required', 'error'); return; }
+
+      const res = await fetch(`${API}/tasks`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ title, description, status })
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg(data.error, 'error'); return; }
+      showMsg('Task created!', 'success');
+      document.getElementById('taskTitle').value = '';
+      document.getElementById('taskDesc').value = '';
+      loadTasks();
+    }
+
+    async function deleteTask(id) {
+      if (!confirm('Delete this task?')) return;
+      const res = await fetch(`${API}/tasks/${id}`, { method: 'DELETE', headers: authHeaders() });
+      const data = await res.json();
+      if (!res.ok) { showMsg(data.error, 'error'); return; }
+      showMsg('Deleted', 'success');
+      loadTasks();
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'index.html';
+    }
+
+    loadTasks();
+  </script>
+</body>
+</html>

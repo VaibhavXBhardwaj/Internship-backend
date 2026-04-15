@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PrimeTrade – Login</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .card { background: #1e293b; padding: 2rem; border-radius: 12px; width: 360px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    h2 { margin-bottom: 1.5rem; font-size: 1.4rem; color: #38bdf8; }
+    input { width: 100%; padding: 0.6rem 0.8rem; margin-bottom: 1rem; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 0.9rem; }
+    button { width: 100%; padding: 0.7rem; background: #0284c7; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    button:hover { background: #0369a1; }
+    .toggle { margin-top: 1rem; text-align: center; font-size: 0.85rem; color: #94a3b8; }
+    .toggle span { color: #38bdf8; cursor: pointer; }
+    .msg { margin-top: 1rem; padding: 0.6rem; border-radius: 6px; font-size: 0.85rem; text-align: center; display: none; }
+    .msg.error { background: #450a0a; color: #fca5a5; display: block; }
+    .msg.success { background: #052e16; color: #86efac; display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 id="formTitle">Login</h2>
+    <div id="nameField" style="display:none">
+      <input type="text" id="name" placeholder="Full name" />
+    </div>
+    <input type="email" id="email" placeholder="Email address" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="handleSubmit()">Continue</button>
+    <div class="toggle">
+      <span id="toggleText" onclick="toggleMode()">Don't have an account? Register</span>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
